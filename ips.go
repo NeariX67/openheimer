@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+
 	"log"
 	"strconv"
 	"strings"
@@ -11,7 +12,7 @@ import (
 
 func readFromFile(filePath string, outputChannel chan string) int {
 	log.Printf("Reading IPs from %v...\n", filePath)
-	fileData, err := ioutil.ReadFile(filePath)
+	fileData, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Unable to read file: %v\n", err.Error())
 		return 1
@@ -104,7 +105,7 @@ func validateIps(ips []string) (bool, int) {
 			if err != nil {
 				return false, index
 			}
-			if number < 0 || number > 65535 {
+			if number > 65535 {
 				return false, index
 			}
 		} else {
