@@ -16,7 +16,8 @@ func readFromFile(filePath string, outputChannel chan string) int {
 		log.Fatalf("Unable to read file: %v\n", err.Error())
 		return 1
 	}
-	ips := strings.Split(strings.TrimSpace(string(fileData)), "\n")
+	fileStr := strings.ReplaceAll(string(fileData), "\r", "")
+	ips := strings.Split(strings.TrimSpace(fileStr), "\n")
 	ok, index := validateIps(ips)
 	if !ok {
 		log.Fatalf("The IP address on line %v is invalid!\n", index+1)

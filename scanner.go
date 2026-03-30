@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -63,16 +61,9 @@ func scanIp(ip string, port uint16, mutex *sync.Mutex) {
 		mutex.Unlock()
 		return
 	}
-	jsonObject, err := json.Marshal(response)
-	if err != nil {
-		log.Printf("Unable to marshal server response: %v\n", err.Error())
-		mutex.Lock()
-		scanWorkers--
-		mutex.Unlock()
-		return
-	}
+
 	log.Printf("Found Minecraft server at %v:%v\n", ip, port)
-	err = database.Write(fmt.Sprintf("%v:%v", ip, port), jsonObject)
+	err = database.Write(ip, port, response)
 	if err != nil {
 		log.Printf("Unable to write to database: %v\n", err.Error())
 	}

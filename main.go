@@ -7,13 +7,11 @@ import (
 	"log"
 	"os"
 	"time"
-
-	"github.com/peterbourgon/diskv/v3"
 )
 
 var (
 	version        string = "0.1.1"
-	database       *diskv.Diskv
+	database       *Database
 	addressChannel chan string = make(chan string)
 	scanQueue      chan string = make(chan string)
 	pingWorkers    int
@@ -24,7 +22,10 @@ var (
 	scanned        int64
 	valid          int64
 
-	databasePath   string
+	databaseUrl    string
+	databaseUser   string
+	databasePass   string
+	databaseName   string
 	logFile        string
 	ipFile         string
 	startingIp     string
@@ -35,7 +36,10 @@ var (
 )
 
 func main() {
-	flag.StringVar(&databasePath, "database", "openheimer.db", "The database to store the results in")
+	flag.StringVar(&databaseUrl, "databaseUrl", "localhost:3306", "The URL of the database to store the results in")
+	flag.StringVar(&databaseUser, "databaseUser", "root", "The user for the database")
+	flag.StringVar(&databasePass, "databasePass", "", "The password for the database")
+	flag.StringVar(&databaseName, "databaseName", "openheimer", "The name of the database")
 	flag.StringVar(&logFile, "logFile", "openheimer.log", "The file to store the logs in")
 	flag.StringVar(&ipFile, "ipFile", "", "The file to extract IP addresses from")
 	flag.StringVar(&startingIp, "startingIp", "1.0.0.0", "The IP address to start scanning from")
@@ -58,12 +62,12 @@ func main() {
 		return
 	}
 	log.SetOutput(io.MultiWriter(os.Stdout, file))
-	flatTransform := func(s string) []string { return []string{} }
-	database = diskv.New(diskv.Options{
-		BasePath:     databasePath,
-		Transform:    flatTransform,
-		CacheSizeMax: 1024 * 1024,
-	})
+	db, err := NewDatabase(databaseUrl, databaseUser, databasePass, databaseName)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	database = db
 	go displayStatus()
 	go pingIps()
 	go scanIps()
