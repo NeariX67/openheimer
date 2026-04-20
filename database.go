@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,8 +41,21 @@ func NewDatabase(url, user, pass, name string) (*Database, error) {
 }
 
 func (db *Database) init() error {
+	port := 3306
+	dbUrl, err := url.Parse("mysql://" + db.url)
+	if err != nil {
+		return err
+	}
+	dbPort := dbUrl.Port()
+	if dbPort != "" {
+		port, err = strconv.Atoi(dbUrl.Port())
+		if err != nil {
+			return err
+		}
+	}
+
 	cfg := mysql.Config{
-		DSN: fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", db.username, db.password, db.url, 3306, db.name),
+		DSN: fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", db.username, db.password, dbUrl.Hostname(), port, db.name),
 		// DisableWithReturning: true,
 	}
 	dialector := mysql.New(cfg)
