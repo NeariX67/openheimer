@@ -80,10 +80,8 @@ func (db *Database) init() error {
 	return nil
 }
 
-func (db *Database) Write(ip string, port uint16, info *mcpinger.ServerInfo) error {
-	entry := &ServerEntry{}
-	entry.FromServerInfo(ip, port, info)
-	return db.gormDb.Save(entry).Error
+func (db *Database) Write(se ServerEntry) error {
+	return db.gormDb.Save(se).Error
 }
 
 type ServerEntry struct {
@@ -97,6 +95,9 @@ type ServerEntry struct {
 	Online          int32
 
 	Motd string
+
+	Ping        int32
+	CountryCode string
 }
 
 func (se *ServerEntry) FromServerInfo(ip string, port uint16, info *mcpinger.ServerInfo) {

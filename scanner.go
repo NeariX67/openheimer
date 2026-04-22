@@ -51,6 +51,7 @@ func scanIp(ip string, port uint16, mutex *sync.Mutex) {
 	if *verbose {
 		log.Printf("Scanning %v:%v...\n", ip, port)
 	}
+	startTime := time.Now()
 	response, err := mcpinger.New(ip, port, mcpinger.WithTimeout(time.Second*time.Duration(timeout))).Ping()
 	if err != nil {
 		if *verbose {
@@ -61,9 +62,19 @@ func scanIp(ip string, port uint16, mutex *sync.Mutex) {
 		mutex.Unlock()
 		return
 	}
+	ping := time.Since(startTime).Milliseconds()
 
-	log.Printf("Found Minecraft server at %v:%v\n", ip, port)
-	err = database.Write(ip, port, response)
+	entry := &ServerEntry{}
+	entry.FromServerInfo(ip, port, response)
+
+	loc, err := fetchIpLocation(ip)
+	if err == nil {
+		entry.CountryCode = loc.CountryCode2
+	}
+	entry.Ping = int32(ping)
+
+	log.Printf("Found Minecraft server at %v:%v (Ping: %d ms)\n", ip, port, ping)
+	err = database.Write(*entry)
 	if err != nil {
 		log.Printf("Unable to write to database: %v\n", err.Error())
 	}
