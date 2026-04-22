@@ -61,11 +61,14 @@ func (db *Database) init() error {
 	dialector := mysql.New(cfg)
 	logger := gormLogger.New(log.New(os.Stdout, "", log.LstdFlags), gormLogger.Config{
 		SlowThreshold:             time.Second,
-		LogLevel:                  gormLogger.Info,
+		LogLevel:                  gormLogger.Silent,
 		IgnoreRecordNotFoundError: true,
 		ParameterizedQueries:      false,
 		Colorful:                  true,
 	})
+	if printSql != nil && *printSql {
+		logger = logger.LogMode(gormLogger.Info)
+	}
 	gormDb, err := gorm.Open(dialector, &gorm.Config{Logger: logger})
 	if err != nil {
 		return err
